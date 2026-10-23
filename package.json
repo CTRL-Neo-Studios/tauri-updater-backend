@@ -1,0 +1,82 @@
+{
+  "name": "tauri-updater-backend",
+  "version": "1.0.0",
+  "description": "My new Nuxt module",
+  "repository": "your-org/my-module",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
+    }
+  },
+  "main": "./dist/module.mjs",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.mts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "workspaces": [
+    "playground"
+  ],
+  "scripts": {
+    "prepack": "nuxt-module-build build",
+    "dev": "bun run dev:prepare && nuxt dev playground",
+    "dev:build": "nuxt build playground",
+    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playground",
+    "release": "bun run test && bun run prepack && changelogen --release && bun publish && git push --follow-tags",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@nuxt/kit": "^4.6.2"
+  },
+  "devDependencies": {
+    "@comark/nuxt": "0.8.1",
+    "@nuxt/devtools": "^3.4.4",
+    "@nuxt/module-builder": "^1.0.3",
+    "@nuxt/schema": "^4.6.2",
+    "@nuxt/test-utils": "^4.3.4",
+    "@nuxt/ui": "4.12.0",
+    "@nuxthub/core": "0.10.10",
+    "@tiptap/core": "^3",
+    "@tiptap/extension-bubble-menu": "^3",
+    "@tiptap/extension-code": "^3",
+    "@tiptap/extension-collaboration": "^3",
+    "@tiptap/extension-drag-handle": "^3",
+    "@tiptap/extension-drag-handle-vue-3": "^3",
+    "@tiptap/extension-floating-menu": "^3",
+    "@tiptap/extension-horizontal-rule": "^3",
+    "@tiptap/extension-image": "^3",
+    "@tiptap/extension-mention": "^3",
+    "@tiptap/extension-node-range": "^3",
+    "@tiptap/extension-placeholder": "^3",
+    "@tiptap/markdown": "^3",
+    "@tiptap/pm": "^3",
+    "@tiptap/starter-kit": "^3",
+    "@tiptap/suggestion": "^3",
+    "@tiptap/vue-3": "^3",
+    "@type32/nuxt-cs-utils": "2.2.2",
+    "@types/node": "latest",
+    "@vueuse/nuxt": "15.0.0",
+    "changelogen": "^0.6.2",
+    "nuxt": "^4.6.2",
+    "nuxt-auth-utils": "0.5.32",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5",
+    "vue": "^3.5.44",
+    "vue-tsc": "^3.3.13"
+  },
+  "packageManager": "bun@1.4.4",
+  "trustedDependencies": [
+    "unrs-resolver"
+  ]
+}
