@@ -196,7 +196,7 @@ See `docs/apps-release-guide.md` in prism for a worked example.
 ```bash
 bun install
 bun run dev:prepare
-bun run dev        # playground at http://localhost:3000, admin at /__updater-admin
+bun run dev        # playground at http://localhost:3000, admin at /__updater-admin (sign in with "dev")
 bun run lint
 bun run test       # release rules on libSQL + PGlite, and a NuxtHub host build
 bun run prepack    # build dist/

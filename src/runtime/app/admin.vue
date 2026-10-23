@@ -38,10 +38,12 @@ const nav = computed(() => [
 	{label: 'Maintenance', icon: 'i-lucide-wrench', to: `${base}/maintenance`, active: section.value.name === 'maintenance'}
 ])
 
-// auth: try the API; 401 means the token fallback is in use and we need one, 403/404 means no access at all
-const state = ref<'checking' | 'ok' | 'needs-token' | 'denied'>('checking')
+// auth: try the API. 401: token fallback in use, ask for one. 403: the host's hook said no. 404: neither a hook nor a
+// token is configured, so the admin is closed. Anything else (503 database down, ...) is shown as-is.
+const state = ref<'checking' | 'ok' | 'needs-token' | 'denied' | 'unconfigured' | 'error'>('checking')
 const tokenInput = ref('')
 const authError = ref('')
+const loadError = ref('')
 
 async function check() {
 	state.value = 'checking'
@@ -50,12 +52,18 @@ async function check() {
 		state.value = 'ok'
 	}
 	catch (error) {
-		if (error instanceof ApiError && error.status === 401) {
+		const status = error instanceof ApiError ? error.status : 0
+		if (status === 401) {
 			if (adminToken.value) authError.value = 'That token was rejected.'
 			setAdminToken('')
 			state.value = 'needs-token'
 		}
-		else state.value = 'denied'
+		else if (status === 403) state.value = 'denied'
+		else if (status === 404) state.value = 'unconfigured'
+		else {
+			loadError.value = error instanceof Error ? error.message : 'Request failed'
+			state.value = 'error'
+		}
 	}
 }
 
@@ -96,6 +104,20 @@ watch(() => route.fullPath, () => window.scrollTo({top: 0}))
 
 			<div v-else-if="state === 'denied'" class="grid min-h-svh place-items-center p-4">
 				<UAlert class="max-w-md" color="error" variant="subtle" icon="i-lucide-shield-x" title="No access" description="Your account isn't allowed to manage releases."/>
+			</div>
+
+			<div v-else-if="state === 'unconfigured'" class="grid min-h-svh place-items-center p-4">
+				<UAlert class="max-w-lg" color="warning" variant="subtle" icon="i-lucide-lock" title="The admin isn't set up yet">
+					<template #description>
+						It stays closed until you choose how to sign in. Set
+						<code class="font-mono">NUXT_TAURI_UPDATER_ADMIN_TOKEN</code> (or <code class="font-mono">tauriUpdater.adminToken</code>),
+						or add a <code class="font-mono">tauri-updater:authorize</code> server hook backed by your own auth. Then reload.
+					</template>
+				</UAlert>
+			</div>
+
+			<div v-else-if="state === 'error'" class="grid min-h-svh place-items-center p-4">
+				<UAlert class="max-w-md" color="error" variant="subtle" icon="i-lucide-circle-alert" title="The admin couldn't load" :description="loadError"/>
 			</div>
 
 			<div v-else class="mx-auto grid max-w-7xl gap-6 p-4 md:grid-cols-[14rem_1fr] md:p-8">
