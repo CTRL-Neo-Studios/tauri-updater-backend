@@ -2,48 +2,24 @@ name: ci
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24.21.0
-
-      - run: npm i -g --force corepack@latest && corepack enable
-
-      - name: Install dependencies
-        run: npx nypm@latest i
-
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Prepare
+        run: bun run dev:prepare
       - name: Lint
-        run: npm run lint
-
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24.21.0
-
-      - run: npm i -g --force corepack@latest && corepack enable
-
-      - name: Install dependencies
-        run: npx nypm@latest i
-
-      - name: Playground prepare
-        run: npm run dev:prepare
-
+        run: bun run lint
+      - name: Typecheck
+        run: bunx vue-tsc --noEmit -p playground
       - name: Test
-        run: npm run test
+        run: bun run test
+      - name: Build module
+        run: bun run prepack

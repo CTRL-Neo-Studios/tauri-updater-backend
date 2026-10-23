@@ -1,8 +1,8 @@
 {
   "name": "tauri-updater-backend",
-  "version": "1.0.0",
-  "description": "My new Nuxt module",
-  "repository": "your-org/my-module",
+  "version": "0.1.0",
+  "description": "Nuxt module: Tauri updater feeds, release channels, access tokens, CI publishing and an admin UI, backed by your own database and any S3-compatible bucket.",
+  "repository": "CTRL-Neo-Studios/tauri-updater-backend",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -30,22 +30,52 @@
     "dev": "bun run dev:prepare && nuxt dev playground",
     "dev:build": "nuxt build playground",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playground",
-    "release": "bun run test && bun run prepack && changelogen --release && bun publish && git push --follow-tags",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
+    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit",
+    "release": "bun run lint && bun run test && bun run prepack && changelogen --release && bun publish && git push --follow-tags"
   },
   "dependencies": {
-    "@nuxt/kit": "^4.6.2"
+    "@nuxt/kit": "^4.6.2",
+    "aws4fetch": "^1.0.20",
+    "db0": "^0.4.1",
+    "defu": "^6.1.7",
+    "h3": "^1.15.11",
+    "jose": "^6.2.13",
+    "semver": "^7.8.5",
+    "zod": "^4.6.7"
+  },
+  "peerDependencies": {
+    "@electric-sql/pglite": "*",
+    "@libsql/client": "*",
+    "@nuxt/ui": "^4.0.0",
+    "pg": "*"
+  },
+  "peerDependenciesMeta": {
+    "@electric-sql/pglite": {
+      "optional": true
+    },
+    "@libsql/client": {
+      "optional": true
+    },
+    "@nuxt/ui": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "@comark/nuxt": "0.8.1",
+    "@electric-sql/pglite": "^0.5.11",
+    "@libsql/client": "^0.18.0",
     "@nuxt/devtools": "^3.4.4",
+    "@nuxt/eslint-config": "^1.17.0",
     "@nuxt/module-builder": "^1.0.3",
     "@nuxt/schema": "^4.6.2",
     "@nuxt/test-utils": "^4.3.4",
     "@nuxt/ui": "4.12.0",
-    "@nuxthub/core": "0.10.10",
+    "@nuxthub/core": "0.10.11",
     "@tiptap/core": "^3",
     "@tiptap/extension-bubble-menu": "^3",
     "@tiptap/extension-code": "^3",
@@ -63,12 +93,14 @@
     "@tiptap/starter-kit": "^3",
     "@tiptap/suggestion": "^3",
     "@tiptap/vue-3": "^3",
-    "@type32/nuxt-cs-utils": "2.2.2",
     "@types/node": "latest",
-    "@vueuse/nuxt": "15.0.0",
+    "@types/semver": "^7.8.0",
     "changelogen": "^0.6.2",
+    "drizzle-kit": "^0.31.11",
+    "drizzle-orm": "^0.45.4",
+    "eslint": "^10.13.0",
     "nuxt": "^4.6.2",
-    "nuxt-auth-utils": "0.5.32",
+    "pg": "^8.23.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5",
@@ -77,8 +109,6 @@
   },
   "packageManager": "bun@1.4.4",
   "trustedDependencies": [
-    "esbuild",
-    "unrs-resolver",
-    "vue-demi"
+    "unrs-resolver"
   ]
 }
