@@ -1,0 +1,169 @@
+# Reusable release pipeline for Tauri apps served by tauri-updater-backend. Call it from an app repo:
+#
+#   on: {push: {branches: [main]}}
+#   jobs:
+#     release:
+#       uses: CTRL-Neo-Studios/tauri-updater-backend/.github/workflows/tauri-release.yml@main
+#       with: {app: my-app, api: https://example.com/apps}
+#       secrets: inherit
+#       permissions: {contents: read, id-token: write}
+#
+# Builds Windows (NSIS), macOS (universal) and Linux (AppImage, best-effort), then publishes to `api`. The version comes
+# from src-tauri/tauri.conf.json: bump it to release; an unchanged version builds but is skipped at publish.
+# The host must list this workflow in tauriUpdater.oidc.allowedWorkflows, e.g.
+# CTRL-Neo-Studios/tauri-updater-backend/.github/workflows/tauri-release.yml@refs/heads/main
+name: Tauri release
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: App slug registered in the host's updater admin
+        required: true
+        type: string
+      api:
+        description: The host's public updater base URL, including the module prefix (e.g. https://example.com/apps)
+        required: true
+        type: string
+      audience:
+        description: OIDC audience the host expects (tauriUpdater.oidc.audience)
+        required: false
+        type: string
+        default: tauri-updater
+      channel:
+        description: Override the channel (default from the version, 1.0.0-beta.2 → beta, else stable)
+        required: false
+        type: string
+        default: ''
+      notes:
+        description: Release notes shown in the update prompt (default the head commit message)
+        required: false
+        type: string
+        default: ''
+    secrets:
+      TAURI_SIGNING_PRIVATE_KEY:
+        required: true
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD:
+        required: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platforms: windows-x86_64
+            args: --bundles nsis
+            bundle: src-tauri/target/release/bundle
+          - os: macos-latest
+            # one universal build serves Apple Silicon and Intel
+            platforms: darwin-aarch64,darwin-x86_64
+            args: --target universal-apple-darwin --bundles app,dmg
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            bundle: src-tauri/target/universal-apple-darwin/release/bundle
+          - os: ubuntu-22.04
+            platforms: linux-x86_64
+            args: --bundles appimage
+            bundle: src-tauri/target/release/bundle
+    name: build (${{ matrix.platforms }})
+    runs-on: ${{ matrix.os }}
+    # linux is best-effort: publish skips platforms that didn't build
+    continue-on-error: ${{ matrix.os == 'ubuntu-22.04' }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Release tooling
+        uses: actions/checkout@v4
+        with:
+          # tooling at the exact commit of this workflow file, so a script change can't drift from it
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .updater
+          sparse-checkout: scripts
+
+      - name: Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev patchelf
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: ${{ matrix.os }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: echo "value=$(bun -e 'console.log(require("./src-tauri/tauri.conf.json").version)')" >> "$GITHUB_OUTPUT"
+
+      # beforeBuildCommand in tauri.conf.json builds the frontend
+      - name: Build app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: bun run tauri build ${{ matrix.args }}
+
+      - name: Collect bundles
+        shell: bash
+        run: bun .updater/scripts/release.ts collect "${{ matrix.platforms }}" "${{ matrix.bundle }}" "${{ inputs.app }}" "${{ steps.version.outputs.value }}" release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ runner.os }}
+          path: release
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: build
+    # build is green even when linux fails (continue-on-error); publish whatever was collected
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    # never cancel a publish half-way; runs queue per app instead
+    concurrency:
+      group: tauri-release-${{ inputs.app }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src-tauri/tauri.conf.json
+          sparse-checkout-cone-mode: false
+
+      - name: Release tooling
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .updater
+          sparse-checkout: scripts
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release
+          merge-multiple: true
+
+      - name: Publish
+        env:
+          NOTES: ${{ inputs.notes || github.event.head_commit.message }}
+        run: |
+          version=$(bun -e 'console.log(require("./src-tauri/tauri.conf.json").version)')
+          bun .updater/scripts/release.ts publish "${{ inputs.api }}" "${{ inputs.app }}" "$version" release --audience "${{ inputs.audience }}" --channel "${{ inputs.channel }}" --notes "$NOTES"

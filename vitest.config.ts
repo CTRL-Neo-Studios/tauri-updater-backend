@@ -1,0 +1,10 @@
+import {defineConfig} from 'vitest/config'
+
+export default defineConfig({
+	test: {
+		include: ['test/**/*.test.ts'],
+		// e2e suites boot a Nuxt build; give them room
+		testTimeout: 60_000,
+		hookTimeout: 180_000
+	}
+})

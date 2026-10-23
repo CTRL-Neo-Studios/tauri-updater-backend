@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "hub-host",
+  "type": "module",
+  "dependencies": {
+    "@libsql/client": "*",
+    "drizzle-kit": "*",
+    "drizzle-orm": "*"
+  }
+}
