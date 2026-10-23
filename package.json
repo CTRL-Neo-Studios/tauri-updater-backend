@@ -109,6 +109,8 @@
   },
   "packageManager": "bun@1.4.4",
   "trustedDependencies": [
-    "unrs-resolver"
+    "esbuild",
+    "unrs-resolver",
+    "vue-demi"
   ]
 }
