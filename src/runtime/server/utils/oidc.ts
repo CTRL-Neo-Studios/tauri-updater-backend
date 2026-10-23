@@ -34,6 +34,6 @@ export async function assertPublisher(authorization: string | undefined, app: Ap
 		&& payload.ref === app.ref
 		&& typeof payload.job_workflow_ref === 'string' && settings.allowedWorkflows.includes(payload.job_workflow_ref)
 	if (!ok || typeof payload.run_id !== 'string')
-		throw new HttpError(401, `Only ${app.repo}@${app.ref} via an allowed release workflow may publish`)
+		throw new HttpError(401, `Only ${app.repo} on branch ${app.ref.replace(/^refs\/heads\//, '')}, via an allowed release workflow, may publish`)
 	return payload.run_id
 }

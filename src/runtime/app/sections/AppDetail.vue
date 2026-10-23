@@ -6,11 +6,13 @@ import UButton from '@nuxt/ui/components/Button.vue'
 import UCard from '@nuxt/ui/components/Card.vue'
 import UEmpty from '@nuxt/ui/components/Empty.vue'
 import UFormField from '@nuxt/ui/components/FormField.vue'
+import UIcon from '@nuxt/ui/components/Icon.vue'
 import UInput from '@nuxt/ui/components/Input.vue'
 import UModal from '@nuxt/ui/components/Modal.vue'
 import USelect from '@nuxt/ui/components/Select.vue'
 import USelectMenu from '@nuxt/ui/components/SelectMenu.vue'
 import ConfirmDelete from '../components/ConfirmDelete.vue'
+import RepoBranchFields from '../components/RepoBranchFields.vue'
 import {formatDate, formatSize, useAdmin} from '../use-admin'
 import type {Channel, Release} from '../use-admin'
 
@@ -35,11 +37,12 @@ const serving = computed(() => {
 	}))
 })
 
-// app settings
-const appForm = ref({repo: '', ref: ''})
+// app settings. The API stores the full git ref (refs/heads/<branch>); people only ever see and type the branch.
+const branchOf = (ref: string) => ref.replace(/^refs\/heads\//, '')
+const appForm = ref({repo: '', branch: ''})
 const settingsOpen = ref(false)
 function editApp() {
-	appForm.value = {repo: data.value!.app.repo, ref: data.value!.app.ref}
+	appForm.value = {repo: data.value!.app.repo, branch: branchOf(data.value!.app.ref)}
 	settingsOpen.value = true
 }
 async function saveApp() {
@@ -95,7 +98,10 @@ function size(r: Release) {
 			<div>
 				<UButton :to="`${base}/apps`" label="Apps" icon="i-lucide-chevron-left" variant="link" color="neutral" class="mb-1 px-0"/>
 				<h1 class="text-2xl font-semibold text-highlighted">{{ data.app.slug }}</h1>
-				<p class="font-mono text-sm text-muted">{{ data.app.repo }} @ {{ data.app.ref }}</p>
+				<p class="flex items-center gap-1.5 font-mono text-sm text-muted">
+					<UIcon name="i-lucide-github" class="size-4"/>{{ data.app.repo }}
+					<UIcon name="i-lucide-git-branch" class="ms-2 size-4"/>{{ branchOf(data.app.ref) }}
+				</p>
 			</div>
 			<div class="flex gap-2">
 				<UButton label="Settings" icon="i-lucide-settings" color="neutral" variant="outline" size="sm" @click="editApp"/>
@@ -140,7 +146,7 @@ function size(r: Release) {
 					<USelect v-model="channelFilter" :items="[{label: 'All channels', value: 'all'}, ...data.channels.map(c => ({label: c.name, value: c.name}))]" size="sm" class="w-44"/>
 				</div>
 			</template>
-			<UEmpty v-if="!releases.length" icon="i-lucide-rocket" title="No releases" description="Bump the version in tauri.conf.json and push to the publishing ref."/>
+			<UEmpty v-if="!releases.length" icon="i-lucide-rocket" title="No releases" :description="`Bump the version in tauri.conf.json and push to ${branchOf(data.app.ref)}.`"/>
 			<div v-else class="divide-y divide-default">
 				<div v-for="release in releases" :key="release.version" class="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
 					<span class="font-mono font-medium text-highlighted" :class="release.yanked_at && 'line-through text-muted'">{{ release.version }}</span>
@@ -169,12 +175,11 @@ function size(r: Release) {
 			</div>
 		</UCard>
 
-		<UModal v-model:open="settingsOpen" title="App settings" description="Only this repo, on this ref, may publish releases.">
+		<UModal v-model:open="settingsOpen" title="App settings" description="Who may publish releases for this app.">
 			<template #body>
 				<form class="space-y-4" @submit.prevent="saveApp">
-					<UFormField label="Publishing repo"><UInput v-model="appForm.repo" class="w-full font-mono"/></UFormField>
-					<UFormField label="Publishing ref"><UInput v-model="appForm.ref" class="w-full font-mono"/></UFormField>
-					<div class="flex justify-end"><UButton type="submit" label="Save" :loading="busy"/></div>
+					<RepoBranchFields v-if="settingsOpen" v-model:repo="appForm.repo" v-model:branch="appForm.branch"/>
+					<div class="flex justify-end"><UButton type="submit" label="Save" :loading="busy" :disabled="!appForm.repo || !appForm.branch"/></div>
 				</form>
 			</template>
 		</UModal>

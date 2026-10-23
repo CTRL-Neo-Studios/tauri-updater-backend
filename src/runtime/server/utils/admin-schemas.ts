@@ -1,8 +1,12 @@
 import {z} from 'zod'
-import {channelAccess, gitRef, grant, repo, slug} from './model'
+import {branch, channelAccess, grant, repo, slug} from './model'
 
-export const appInput = z.object({slug, repo, ref: gitRef.default('refs/heads/main')})
-export const appPatch = z.object({repo, ref: gitRef})
+/** Admins pick a branch; the stored value is the full ref GitHub puts in the CI login token. */
+const toRef = (name: string) => `refs/heads/${name}`
+
+export const appInput = z.object({slug, repo, branch: branch.default('main')}).transform(({branch, ...app}) => ({...app, ref: toRef(branch)}))
+export const appPatch = z.object({repo, branch}).transform(({branch, ...app}) => ({...app, ref: toRef(branch)}))
+export const repoLookupInput = z.object({repo})
 export const channelInput = z.object({name: slug, access: channelAccess, includes: z.array(slug).default([])})
 export const channelPatch = z.object({access: channelAccess, includes: z.array(slug)})
 export const userInput = z.object({name: slug, note: z.string().max(500).nullish(), grants: z.array(grant).default([])})

@@ -43,6 +43,11 @@ export interface ModuleOptions {
 	adminUi: boolean
 	/** Fallback admin auth when no `tauri-updater:authorize` hook decides. Set at runtime: NUXT_TAURI_UPDATER_ADMIN_TOKEN. */
 	adminToken: string
+	/**
+	 * Optional GitHub token for the admin's repo/branch lookup: lets it see private repos and lifts the 60 calls/hour
+	 * anonymous limit. Read-only access is enough. Set at runtime: NUXT_TAURI_UPDATER_GITHUB_TOKEN.
+	 */
+	githubToken: string
 	database: {
 		/** Chosen at build time, so only that driver is bundled. */
 		connector: DatabaseConnector
@@ -82,6 +87,7 @@ export default defineNuxtModule<ModuleOptions>().with({
 		adminPath: '/__updater-admin',
 		adminUi: true,
 		adminToken: '',
+		githubToken: '',
 		database: {connector: 'libsql', options: {}},
 		s3: {endpoint: '', region: '', bucket: '', accessKeyId: '', secretAccessKey: '', keyPrefix: 'apps'},
 		oidc: {issuer: 'https://token.actions.githubusercontent.com', audience: 'tauri-updater', allowedWorkflows: []},
@@ -104,6 +110,7 @@ export default defineNuxtModule<ModuleOptions>().with({
 			prefix,
 			adminPath,
 			adminToken: options.adminToken,
+			githubToken: options.githubToken,
 			database: {options: defu(options.database.options, {url: '', authToken: '', bindingName: ''})},
 			s3: options.s3,
 			oidc: options.oidc,

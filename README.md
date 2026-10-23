@@ -42,6 +42,7 @@ NUXT_TAURI_UPDATER_S3_BUCKET=updates
 NUXT_TAURI_UPDATER_S3_ACCESS_KEY_ID=…
 NUXT_TAURI_UPDATER_S3_SECRET_ACCESS_KEY=…
 NUXT_TAURI_UPDATER_ADMIN_TOKEN=<long random string>              # admin login fallback, see Admin access
+NUXT_TAURI_UPDATER_GITHUB_TOKEN=…                                # optional: lets the admin see private repos
 ```
 
 Keep the database outside your deployment (Turso, Neon, D1, a mounted volume). A SQLite file inside the project
@@ -58,6 +59,7 @@ several instances at once.
 | `adminPath` | `/__updater-admin` | admin UI; its API is `<adminPath>/api/**` |
 | `adminUi` | `true` | set `false` to register the admin API only |
 | `adminToken` | `''` | admin login fallback; set it at runtime with `NUXT_TAURI_UPDATER_ADMIN_TOKEN` |
+| `githubToken` | `''` | optional, for the admin's repo/branch lookup on private repos; `NUXT_TAURI_UPDATER_GITHUB_TOKEN` |
 | `database.connector` | `libsql` | `libsql`, `postgresql`, `pglite`, `cloudflare-d1`; only this driver is bundled |
 | `database.options` | `{}` | connector options: `url`, `authToken` (libsql), `bindingName` (D1), `dataDir` (pglite) |
 | `s3.keyPrefix` | `apps` | objects go under `<keyPrefix>/<app>/<version>/`; lets the module share a bucket |
@@ -170,8 +172,15 @@ It builds Windows (NSIS), macOS (universal) and Linux (AppImage, best-effort), u
 presigned URLs, and publishes. Pushing an unchanged version builds, then skips the publish with a notice.
 
 A publish is accepted only from a GitHub Actions OIDC token that has the configured audience, comes from the app's
-registered repo and ref (set per app in the admin), and was minted by a workflow listed in `oidc.allowedWorkflows`.
-No storage keys ever leave the server.
+repo and release branch (both chosen per app in the admin), and was minted by a workflow listed in
+`oidc.allowedWorkflows`. The release branch is what stops pushes to other branches, pull requests and forks from
+shipping an update. No storage keys ever leave the server.
+
+When you add an app, the admin checks the repo on GitHub as you type: whether it exists, whether it's public or
+private, and which branches it has, offered in a searchable list (default branch first). The check is a convenience
+only and never blocks saving. Without a token it sees public repos only, at GitHub's 60 lookups per hour; set
+`NUXT_TAURI_UPDATER_GITHUB_TOKEN` (a fine-grained token with read-only *Metadata* access is enough) to see private
+repos too.
 
 The app repo must use Bun, keep `src-tauri/` at the root with the version in `src-tauri/tauri.conf.json`, and commit
 `bun.lock`.

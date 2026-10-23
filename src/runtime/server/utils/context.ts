@@ -11,6 +11,7 @@ export interface UpdaterRuntimeConfig {
 	prefix: string
 	adminPath: string
 	adminToken: string
+	githubToken: string
 	database: {options: Record<string, unknown>}
 	s3: {endpoint: string, region: string, bucket: string, accessKeyId: string, secretAccessKey: string, keyPrefix: string}
 	oidc: {issuer: string, audience: string, allowedWorkflows: string[]}

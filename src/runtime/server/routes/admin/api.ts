@@ -6,7 +6,8 @@ import {createRouter, defineEventHandler, getHeader, readBody, setResponseHeader
 import {useUpdaterConfig, useUpdaterS3, objectKey} from '../../utils/context'
 import {param, useStore} from '../../utils/http'
 import {requireAdmin} from '../../utils/admin'
-import {appInput, appPatch, channelInput, channelPatch, confirmInput, grantInput, purgeInput, sweepInput, userInput, userPatch, yankInput} from '../../utils/admin-schemas'
+import {appInput, appPatch, channelInput, channelPatch, confirmInput, grantInput, purgeInput, repoLookupInput, sweepInput, userInput, userPatch, yankInput} from '../../utils/admin-schemas'
+import {lookupRepo} from '../../utils/github'
 import {hashToken, HttpError, newToken, parse} from '../../utils/model'
 import {deleteRelease, purgePending, sweepOrphans} from '../../utils/releases'
 import type {ReleaseDeps} from '../../utils/releases'
@@ -60,6 +61,12 @@ function buildRouter() {
 	}))
 
 	// ── apps ────────────────────────────────────────────────────────────────
+	/** Live check while typing owner/name: exists?, private?, branches. Never blocks saving (see utils/github.ts). */
+	router.post('/github/repo', defineEventHandler(async (event) => {
+		const {repo} = await body(event, repoLookupInput)
+		return lookupRepo(repo, useUpdaterConfig().githubToken)
+	}))
+
 	router.get('/apps', defineEventHandler(async () => {
 		const store = await useStore()
 		return Promise.all((await store.listApps()).map(async app => ({

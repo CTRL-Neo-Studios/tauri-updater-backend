@@ -33,8 +33,11 @@ export const platformKey = z.string().regex(/^(windows|darwin|linux)-(x86_64|aar
 /** GitHub repo, owner/name. */
 export const repo = z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'must be owner/name')
 
-/** Git ref the publishing workflow must run on. */
-export const gitRef = z.string().regex(/^refs\/(heads|tags)\/[\w./-]+$/, 'must be a full ref like refs/heads/main')
+/** A branch name as people type it (main, release/v2). A pasted full ref (refs/heads/main) is accepted too. */
+export const branch = z.string().trim().transform(b => b.replace(/^refs\/heads\//, ''))
+	.pipe(z.string()
+		.regex(/^[\w./-]{1,200}$/, 'must be a branch name like main or release/v2')
+		.refine(b => !b.startsWith('/') && !b.endsWith('/') && !b.includes('//') && !b.includes('..'), 'must be a branch name like main or release/v2'))
 
 export const channelAccess = z.enum(['public', 'restricted'])
 
