@@ -1,6 +1,6 @@
 {
   "name": "tauri-updater-backend",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Nuxt module: Tauri updater feeds, release channels, access tokens, CI publishing and an admin UI, backed by your own database and any S3-compatible bucket.",
   "repository": "CTRL-Neo-Studios/tauri-updater-backend",
   "license": "MIT",
@@ -34,7 +34,7 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit",
-    "release": "bun run lint && bun run test && bun run prepack && changelogen --release && bun publish && git push --follow-tags"
+    "release": "bun run lint && bun run test && bun run prepack && changelogen --release && bun publish --access public && git push --follow-tags"
   },
   "dependencies": {
     "@nuxt/kit": "^4.6.2",
