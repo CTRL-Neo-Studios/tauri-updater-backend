@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.1.2
+
+[compare changes](https://github.com/CTRL-Neo-Studios/tauri-updater-backend/compare/v0.1.1...v0.1.2)
+
+### 📖 Documentation
+
+- Add end-to-end setup guide ([0316cca](https://github.com/CTRL-Neo-Studios/tauri-updater-backend/commit/0316cca))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v0.1.1
 
 
