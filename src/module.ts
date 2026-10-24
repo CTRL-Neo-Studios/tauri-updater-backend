@@ -34,48 +34,50 @@ function libsqlBinaries(rootDir: string) {
 	}
 }
 
+// Everything is optional: Nuxt types a host's `tauriUpdater` key as Partial<ModuleOptions>, which is shallow, so a
+// required nested key (s3.endpoint, oidc.issuer...) would be demanded in every nuxt.config. `.with(defaults)` below
+// still resolves each one as defined inside setup().
 export interface ModuleOptions {
 	/** Public and CI routes live under this path. Installed apps bake it into their updater endpoint: pick it once. */
-	prefix: string
+	prefix?: string
 	/** Admin UI path; its API is <adminPath>/api/**. */
-	adminPath: string
+	adminPath?: string
 	/** Serve the admin UI (needs @nuxt/ui in the host). The admin API is registered either way. */
-	adminUi: boolean
+	adminUi?: boolean
 	/** Fallback admin auth when no `tauri-updater:authorize` hook decides. Set at runtime: NUXT_TAURI_UPDATER_ADMIN_TOKEN. */
-	adminToken: string
+	adminToken?: string
 	/**
 	 * Optional GitHub token for the admin's repo/branch lookup: lets it see private repos and lifts the 60 calls/hour
 	 * anonymous limit. Read-only access is enough. Set at runtime: NUXT_TAURI_UPDATER_GITHUB_TOKEN.
 	 */
-	githubToken: string
-	database: {
+	githubToken?: string
+	database?: {
 		/** Chosen at build time, so only that driver is bundled. */
-		connector: DatabaseConnector
+		connector?: DatabaseConnector
 		/** Connector options. Secrets at runtime: NUXT_TAURI_UPDATER_DATABASE_OPTIONS_URL, ..._AUTH_TOKEN. */
-		options: Record<string, unknown>
+		options?: Record<string, unknown>
 	}
-	s3: {
-		endpoint: string
-		region: string
-		bucket: string
-		accessKeyId: string
-		secretAccessKey: string
+	s3?: {
+		endpoint?: string
+		region?: string
+		bucket?: string
+		accessKeyId?: string
+		secretAccessKey?: string
 		/** Every object goes under <keyPrefix>/<app>/<version>/; lets the module share a bucket safely. */
-		keyPrefix: string
+		keyPrefix?: string
 	}
-	oidc: {
-		issuer: string
-		audience: string
+	oidc?: {
+		issuer?: string
+		audience?: string
 		/** `job_workflow_ref` values allowed to publish. Empty = publishing disabled. */
-		allowedWorkflows: string[]
+		allowedWorkflows?: string[]
 	}
 	/** Request headers the Tauri app sends; configurable so existing installs keep working after a migration. */
-	headers: {channel: string, token: string}
+	headers?: {channel?: string, token?: string}
 }
 
 const normalizePath = (path: string) => `/${path.replace(/^\/+|\/+$/g, '')}`
 
-// `.with()` types every defaulted option as optional in the host's nuxt.config, including nested keys
 export default defineNuxtModule<ModuleOptions>().with({
 	meta: {
 		name: 'tauri-updater-backend',
