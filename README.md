@@ -3,6 +3,9 @@
 A Nuxt module that turns your Nuxt site into the update server for your Tauri apps: updater feeds, release channels,
 access tokens for private channels, CI publishing from GitHub Actions, and an admin UI to manage it all.
 
+**New here? Follow the [setup guide](docs/setup-guide.md)**: from adding the module to a Nuxt site to a Tauri app that
+updates itself. This README is the reference.
+
 - **Your own database** for metadata: libSQL/Turso, PostgreSQL/Neon, PGlite or Cloudflare D1. It never touches the
   host's NuxtHub `hub:db` or Nitro's `useDatabase()`.
 - **Any S3-compatible bucket** for binaries: AWS S3, Cloudflare R2, Backblaze B2, MinIO, Tigris, DigitalOcean Spaces.

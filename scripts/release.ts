@@ -73,11 +73,16 @@ async function oidcToken(audience: string) {
 
 /** POST to the release service. Accept JSON explicitly: Nuxt renders errors as HTML for clients that accept anything. */
 async function api(base: string, path: string, token: string, body?: unknown) {
+	// manual: fetch drops the Authorization header when a redirect changes host (example.com -> www.example.com), which
+	// the server then reports as a missing OIDC token. Name the real problem instead.
 	const res = await fetch(`${base}${path}`, {
 		method: 'POST',
+		redirect: 'manual',
 		headers: {'authorization': `Bearer ${token}`, 'content-type': 'application/json', 'accept': 'application/json'},
 		body: body === undefined ? undefined : JSON.stringify(body)
 	})
+	if (res.status >= 300 && res.status < 400)
+		fail(`${base}${path} redirects to ${res.headers.get('location')}; set the workflow's \`api\` input to the final URL`)
 	const text = await res.text()
 	let message = text
 	try {
