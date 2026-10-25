@@ -1,6 +1,6 @@
 {
   "name": "tauri-updater-backend",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Nuxt module: Tauri updater feeds, release channels, access tokens, CI publishing and an admin UI, backed by your own database and any S3-compatible bucket.",
   "repository": "CTRL-Neo-Studios/tauri-updater-backend",
   "license": "MIT",

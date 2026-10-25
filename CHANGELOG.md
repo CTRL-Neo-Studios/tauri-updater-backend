@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.1.3
+
+[compare changes](https://github.com/CTRL-Neo-Studios/tauri-updater-backend/compare/v0.1.2...v0.1.3)
+
+### 🩹 Fixes
+
+- Detect redirects in the release script's API calls ([55170e2](https://github.com/CTRL-Neo-Studios/tauri-updater-backend/commit/55170e2))
+
+### ❤️ Contributors
+
+- Type-32
+
 ## v0.1.2
 
 [compare changes](https://github.com/CTRL-Neo-Studios/tauri-updater-backend/compare/v0.1.1...v0.1.2)
