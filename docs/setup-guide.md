@@ -441,6 +441,7 @@ deletes its files from the bucket.
 | CI: *"skipped: X is not newer than stable's X"* | the version wasn't bumped; normal for ordinary pushes |
 | CI: 401 *"Only my-org/my-app on branch main, via an allowed release workflow, may publish"* | wrong branch, the repo in the admin doesn't match, or the workflow isn't in `allowedWorkflows` |
 | CI: 401 *"Invalid GitHub Actions OIDC token"* | `audience` mismatch between the workflow input and `oidc.audience` |
+| CI: *"… redirects to …"*, or 401 *"Missing GitHub Actions OIDC token"* | the `api` input redirects (e.g. bare domain → `www.`), and the redirect drops the token; use the final URL |
 | CI: 404 *"Unknown app or channel"* | app not registered, or the version's prerelease tag (e.g. `-rc.1`) names a channel the app lacks |
 | CI: *".sig missing"* | `createUpdaterArtifacts` is off, or `TAURI_SIGNING_PRIVATE_KEY` isn't set |
 | CI: 422 *"Upload incomplete"* | an upload failed midway; re-run the workflow |
