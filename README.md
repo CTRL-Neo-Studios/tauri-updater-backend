@@ -166,7 +166,7 @@ jobs:
     with:
       app: my-app
       api: https://example.com/apps          # your site + prefix
-      # audience: tauri-updater              # must equal tauriUpdater.oidc.audience
+      # audience: only if the host changed tauriUpdater.oidc.audience; leave both unset
     secrets: inherit                         # TAURI_SIGNING_PRIVATE_KEY (+ _PASSWORD)
     permissions: {contents: read, id-token: write}
 ```
@@ -200,7 +200,8 @@ The app repo must use Bun, keep `src-tauri/` at the root with the version in `sr
 
 `scripts/import-legacy.ts` copies the old S3-JSON layout (`_access.json`, `release.json` files) into the database.
 Token hashes carry over, so issued tokens keep working, and every channel is checked against its old pointer file. To
-keep already-installed apps working, set `prefix`, `headers`, `oidc.audience` and `s3.keyPrefix` to the old values.
+keep already-installed apps working, set `prefix`, `headers` and `s3.keyPrefix` to the old values. (`oidc.audience`
+only concerns CI, never installed apps, so the default is fine.)
 See `docs/apps-release-guide.md` in prism for a worked example.
 
 ## Development

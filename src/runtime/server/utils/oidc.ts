@@ -1,4 +1,4 @@
-import {createRemoteJWKSet, jwtVerify} from 'jose'
+import {createRemoteJWKSet, errors, jwtVerify} from 'jose'
 import type {RemoteJWKSet} from 'jose'
 import {HttpError} from './model'
 import type {AppRow} from './store'
@@ -26,7 +26,10 @@ export async function assertPublisher(authorization: string | undefined, app: Ap
 	try {
 		payload = (await jwtVerify(token, jwks.set, {issuer: settings.issuer, audience: settings.audience})).payload
 	}
-	catch {
+	catch (error) {
+		// the one mistake a caller can fix from the message alone; audiences aren't secret
+		if (error instanceof errors.JWTClaimValidationFailed && error.claim === 'aud')
+			throw new HttpError(401, `GitHub Actions OIDC token has audience ${JSON.stringify(error.payload.aud)}, expected "${settings.audience}"`)
 		throw new HttpError(401, 'Invalid GitHub Actions OIDC token')
 	}
 

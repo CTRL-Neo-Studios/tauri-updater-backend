@@ -440,7 +440,8 @@ deletes its files from the bucket.
 | Overview says *"Storage is not configured"*, or CI fails with 503 *"Release storage is not configured"* | one of the `NUXT_TAURI_UPDATER_S3_*` variables is missing |
 | CI: *"skipped: X is not newer than stable's X"* | the version wasn't bumped; normal for ordinary pushes |
 | CI: 401 *"Only my-org/my-app on branch main, via an allowed release workflow, may publish"* | wrong branch, the repo in the admin doesn't match, or the workflow isn't in `allowedWorkflows` |
-| CI: 401 *"Invalid GitHub Actions OIDC token"* | `audience` mismatch between the workflow input and `oidc.audience` |
+| CI: 401 *"GitHub Actions OIDC token has audience "x", expected "y""* | set the workflow's `audience` input to the expected value (the host's `oidc.audience`) |
+| CI: 401 *"Invalid GitHub Actions OIDC token"* | the token's signature, issuer or expiry failed; check `oidc.issuer` wasn't overridden |
 | CI: *"… redirects to …"*, or 401 *"Missing GitHub Actions OIDC token"* | the `api` input redirects (e.g. bare domain → `www.`), and the redirect drops the token; use the final URL |
 | CI: 404 *"Unknown app or channel"* | app not registered, or the version's prerelease tag (e.g. `-rc.1`) names a channel the app lacks |
 | CI: *".sig missing"* | `createUpdaterArtifacts` is off, or `TAURI_SIGNING_PRIVATE_KEY` isn't set |
