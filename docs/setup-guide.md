@@ -201,7 +201,8 @@ A channel is a stream of releases. On the app page, *Add channel*:
 overtakes the beta.
 
 The channel a release lands on comes from its version: `1.3.0` goes to `stable`, `1.3.0-beta.1` goes to `beta`. The
-channel must exist before you publish to it.
+channel must exist before you publish to it. See [Publish to beta](#publish-to-beta-or-any-channel-instead-of-stable)
+in Part 5.
 
 ### 2.3 Give testers access to restricted channels (optional)
 
@@ -389,6 +390,42 @@ Installed apps pick it up on their next check.
   That's normal.
 - A published version can never be replaced. To fix a broken release, ship the next version. Or **Yank** it in the
   admin: apps stop being offered it right away, and the channel falls back to the previous release.
+
+### Publish to beta (or any channel) instead of stable
+
+The **version** picks the channel: the first word after the `-` is the channel name. Nothing else changes: same
+branch, same workflow, same push.
+
+| `version` in `tauri.conf.json` | Lands on |
+|---|---|
+| `1.3.0` | `stable` |
+| `1.3.0-beta.1` | `beta` |
+| `1.3.0-insider.4` | `insider` |
+| `1.3.0-rc.1` | `rc` (the app needs an `rc` channel, or the publish fails with 404) |
+
+The channel must already exist on the app (2.2), and its name is lowercase: `1.3.0-Beta.1` looks for a channel
+called `Beta` and fails. A bare number such as `1.3.0-1` has no name, so it goes to `stable`.
+
+A typical beta cycle:
+
+1. `1.3.0-beta.1`, push: beta users get it, stable users don't.
+2. `1.3.0-beta.2`, push: beta users move up.
+3. `1.3.0`, push: stable users get it. Beta users get it too, because `beta` also offers `stable` and `1.3.0` is
+   newer than any `1.3.0-beta.N`.
+
+Each version can only be published once, to one channel. There's no "promote beta to stable": ship the final version
+(`1.3.0`) when the beta is good.
+
+To send every build to one channel regardless of version, set `channel` in the workflow:
+
+```yaml
+    with:
+      app: my-app
+      api: https://example.com/apps
+      channel: beta        # every run of this workflow publishes to beta
+```
+
+Only one branch per app may publish (2.1), so channels are chosen by version or by this input, not by branch.
 
 ### Check it yourself
 
